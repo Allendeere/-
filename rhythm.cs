@@ -16,7 +16,7 @@ public class rhythm : MonoBehaviour
     [SerializeField] AudioManger audioManger;
     [SerializeField] bool PlayRhythm;
 
-    [Header("如果是副本 --- 請勾選")]
+    [Header("if in level")]
     [SerializeField] bool Ingame;
     [SerializeField] Transform spawnpoint;
     [SerializeField] GameObject UI_note;
@@ -24,7 +24,7 @@ public class rhythm : MonoBehaviour
     
     [SerializeField] GameObject[] UI_notes;
     //TEST------------
-    [Header("傷害加成 / 音符數量")]
+    [Header("damage buff / note count")]
     [SerializeField] int DamageBoot;
     [SerializeField] Text BullectDamage;
     [SerializeField] Text MeleeDamage;
@@ -34,7 +34,6 @@ public class rhythm : MonoBehaviour
     public void r_Start()
     {
         GetNoteData();
-        //InvokeRepeating("amm累加器", 0, .5f);
         tick = time;
         if (Rhythm != null)
             Destroy(this);
@@ -59,10 +58,10 @@ public class rhythm : MonoBehaviour
     {
         switch (Mode)
         {
-            case 1://正常
+            case 1://normal
                 Mode_ = 1;
                 break;
-            case 2://編輯
+            case 2://Edit
                 Mode_ = 2;
                 break;
 
@@ -89,8 +88,8 @@ public class rhythm : MonoBehaviour
 
     public static void Refresh()
     {
-        int num = 0;        int num_ = 0;        int count = 0;        int count_ = 4;      Rhythm.DamageBoot = 0;//傷害加成 / 音符數量
-        float H = 0;        float G = 0;         float V = 0.88f; //顏色 / 飽和 / 亮度
+        int num = 0;        int num_ = 0;        int count = 0;        int count_ = 4;      Rhythm.DamageBoot = 0;//damage buff / note count
+        float H = 0;        float G = 0;         float V = 0.88f;
         
         Rhythm.newnum = 1;
         while (num_ < 32) { 
@@ -169,7 +168,6 @@ public class rhythm : MonoBehaviour
                 {
                     Rhythm.NoteButton[i].used = true;
                     Rhythm.image[i].color = Color.HSVToRGB(0, 0, 1);
-                    //                    Rhythm.image[i].color = Color.HSVToRGB(.4f, .8f, .88f);
                 }
             }
             Rhythm.newnum++;
@@ -191,16 +189,13 @@ public class rhythm : MonoBehaviour
         for (int i = 0; i < S_notes.MyRhythm.Count; i++)
         {
             S_notes.MyRhythm[i]= PlayerPrefs.GetInt("note_" + i, S_notes.MyRhythm[i]);
-            //Debug.Log(("note_" + i) +PlayerPrefs.GetInt("note_" + i));
         }
     }
     void SaveNoteData()
     {
-        //PlayerPrefs.SetInt("Note", S_notes.MyRhythm.Count);
         for (int i = 0; i < S_notes.MyRhythm.Count; i++)
         {
             PlayerPrefs.SetInt("note_" + i, S_notes.MyRhythm[i]);
-            //Debug.Log(("note_" + i) + PlayerPrefs.GetInt("note_" + i));
         }
     }
     public void damage_system()
@@ -213,14 +208,14 @@ public class rhythm : MonoBehaviour
         pinfo.Bullect = Mathf.RoundToInt(BullectBootTotul = Mathf.Round((basedamage * ((34 - countnote) / 33)) * (((34 - countnote) / 33) + 1)));
 
         PlayerPrefs.SetInt("BullectDamage", pinfo.Bullect);
-        //傷害計算 :  (基本傷害 *((34 - count)  / 33) )* ((34 - count)  / 33)+1 ) 
+        //Damage count :  (damage *((34 - count)  / 33) )* ((34 - count)  / 33)+1 ) 
 
        
 
         pinfo.Melee = Mathf.RoundToInt(MeleeBootTotul = Mathf.Round((basedamage / 2) * ((countnote + 3) / 33)));
 
         PlayerPrefs.SetInt("MeleeDamage", pinfo.Melee);
-        //MeleeDamage傷害計算 :  (基本傷害*0.5) * (count +3 / 33) 
+        //MeleeDamage count :  (damage*0.5) * (count +3 / 33) 
 
         if (!Ingame)
         {
@@ -229,7 +224,7 @@ public class rhythm : MonoBehaviour
         }
         
     }
-    public void amm累加器()
+    public void loopNote()
     {
         damage_system();
         anum++;
