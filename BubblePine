@@ -1,0 +1,410 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
+
+
+public class BubblePine : MonoBehaviour
+{
+    [SerializeField] PhotonView view;
+    [SerializeField] Rigidbody2D rb;
+    [SerializeField] Animator An;
+    [SerializeField] Transform Targe;
+    [SerializeField] float view_range = 4;
+    [SerializeField] float ChaseRange = 10;
+    [SerializeField] float attack_range = 2;
+    [SerializeField] int state=0;
+    [SerializeField] bool Lock;
+    [SerializeField] Enemy em;
+
+    [SerializeField] GameObject nearestEnemy;
+    int PlayersID;
+    [SerializeField]
+    GameObject[] enemies;
+
+    bool chaceLock;
+    [SerializeField] GameObject Bullect;
+    [SerializeField] GameObject ATK2Bullect;
+    [SerializeField] Transform Shoot;
+    Vector2 direction = new Vector2();
+    bool filp;
+    bool atk2;
+    float tick=1;
+    bool _Firendly;
+
+    float tickII;
+    [Header("計數器")]
+    [SerializeField] Conscience conscience;
+    Vector2 groundchack;
+    Vector2 groundck_II;  
+
+    bool onground;
+    bool jump;
+    bool inair;
+    [SerializeField]
+    bool onground_II;
+    private void Start()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Invoke(nameof(Start__), 2);
+
+            view.RPC("bubbleping_state", RpcTarget.All, 0);
+        }
+        else
+        {
+
+        }
+    }
+    private void Update()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            groundchack = transform.position;
+
+            groundchack.y = transform.position.y - .25f;
+
+            groundck_II.y = transform.position.y - 2;
+
+            onground_II = Physics2D.OverlapCircle(groundck_II, .2f, LayerMask.GetMask("ground")) ? onground_II = true : onground_II = false;
+            onground = Physics2D.OverlapCircle(groundchack, .2f, LayerMask.GetMask("ground")) ? onground = true : onground = false;
+
+            if (em.health <= 0)
+            {
+                this.enabled = false;
+            }
+            if (nearestEnemy == null)
+            {
+                if (Time.time > tickII)
+                {
+                    tickII = Time.time + 1;
+                    Delay();
+                }
+            }
+            else if (nearestEnemy != null)
+            {
+                Targe = nearestEnemy.transform;
+
+                float playerpos = Vector2.Distance(nearestEnemy.transform.position, transform.position);
+                if (playerpos <= view_range && !Lock && playerpos > attack_range && state != 4 && !_Firendly) // ATK_MOD
+                {
+                    state = Random.Range(1, 3); // 1~2
+                    Lock = true;
+                    view.RPC("bubbleping_state", RpcTarget.All, state); 
+                }
+                else if (playerpos <= attack_range && !Lock && state != 4)
+                {
+                    state = 3;
+                    Lock = true;
+                    view.RPC("bubbleping_state", RpcTarget.All, 3); 
+                }
+                else if (playerpos > view_range && playerpos < ChaseRange)
+                {
+                    if (!Lock)
+                    {
+                        state = 4;
+                        Lock = true;
+                        view.RPC("bubbleping_state", RpcTarget.All, 4);
+                    }
+                    if (state == 4)
+                    {
+                        if (onground && !jump && !inair)  //if on ground
+                        {
+
+                            if (Physics2D.OverlapCircle(Shoot.position, .05f, LayerMask.GetMask("ground")))
+                            {
+                                jump = true;
+                                inair = true;
+                                StartCoroutine(ExampleCoroutine(4));
+                            }
+                            else
+                            {
+                                view.RPC("Chase", RpcTarget.All);
+                            }
+                        }
+                        else if (inair)//fall
+                        {
+                            rb.velocity = filp == true ?
+                                Vector2.left * 0.5f + Vector2.down * 20 :
+                                Vector2.right * 0.5f + Vector2.down * 20;
+                        }
+
+                        if (onground)
+                        {
+                            inair = false;
+                        }
+                    }
+                }
+                if (state == 4 && playerpos <= view_range && Lock)
+                {
+                    view.RPC("bubbleping_state", RpcTarget.All,0);
+                    view.RPC("Filter", RpcTarget.All);
+                    view.RPC("LostPlayerPos", RpcTarget.All); 
+                }
+
+                if (playerpos < ChaseRange && !_Firendly)
+                {
+                    tick -= Time.deltaTime;
+                    if (tick < 0)
+                    {
+                        tick = 1;
+                        view.RPC("IsFriendly", RpcTarget.All);
+                    }
+                }
+                
+                direction = Targe.position - transform.position;
+
+                Vector3 v3 = direction.x < 0 ?
+                    new Vector3(0, 0, 0) : new Vector3(0, -180, 0);
+
+                transform.eulerAngles = direction.x < 0 ?
+                    Vector3.MoveTowards(this.transform.eulerAngles, v3, 500) :
+                    Vector3.MoveTowards(this.transform.eulerAngles, v3, 500);
+
+                filp = direction.x < 0 ? true : false;
+                
+                if (atk2)
+                {
+                    view.RPC("MoveGOJ", RpcTarget.All);
+                }
+            }
+        }
+        else { }
+    }
+
+
+    [PunRPC]
+    void IsFriendly()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            if (Targe.GetComponent<playermovement>().crouch == true && !_Firendly)//觸發友善
+            {
+
+                float randValue = Random.value;
+                if (randValue < .9f)
+                {
+                    Debug.Log("泡泡 -- IsFriendly X");
+                }
+                else
+                {
+                    Debug.Log("泡泡 -- IsFriendly O");
+                    conscience.Em_Tame("BubblePing");
+                    view.RPC("RPC_Friendly", RpcTarget.All);
+                }
+            }
+        }
+    }
+    [PunRPC]
+    void RPC_Friendly()
+    {
+        state = 0;
+        _Firendly = true;
+    }
+
+    [PunRPC]
+    void Filter()
+    {
+        Lock = false;
+        Debug.Log("泡泡 -- Filter");
+    }
+
+    [PunRPC]
+    void bubbleping_state(int stae)
+    {
+        state = stae;
+        Debug.Log("泡泡 -- 狀態");
+        switch (state)
+        {
+            case 0:
+                An.SetBool("Chace", false);
+                break;
+            case 1:
+                ATK();
+                Invoke(nameof(Filter), 4.6f);
+                break;
+            case 2:
+                ATK2();
+                Invoke(nameof(Filter), 4.6f);
+                break;
+            case 3:
+                RUN();
+                Invoke(nameof(Filter), 2f);
+                break;
+            case 4:
+                break;
+        }      
+    }
+    [PunRPC]
+    void Chase()
+    {
+        Debug.Log("泡泡 -- Chase");
+        An.SetBool("Chace",true);
+        rb.velocity = filp == true ?    Vector2.left * 2 :    Vector2.right * 2;
+    }
+
+    void ATK()
+    {
+        Debug.Log("泡泡 -- ATK");
+        An.SetTrigger("ATK");
+        StartCoroutine(ExampleCoroutine(1));
+    }
+    void ATK2()
+    {
+        An.SetTrigger("ATK2");
+        StartCoroutine(ExampleCoroutine(2));
+    }
+    void RUN()
+    {
+        An.SetTrigger("RUN");
+        StartCoroutine(ExampleCoroutine(3));
+    }
+
+
+    [PunRPC]
+    void GetPlayerPos(int T)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+            {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject enemy  in enemies)
+            {
+                if(PlayersID == enemy.GetComponent<PhotonView>().ViewID)
+                {
+                    nearestEnemy = enemy;
+                }
+            }
+        }
+        else if(PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log(T);
+        }
+    }
+    [PunRPC]
+    void LostPlayerPos()
+    {
+        nearestEnemy = null;
+    }
+
+    [PunRPC]
+    void Start___()
+    {
+        enemies = GameObject.FindGameObjectsWithTag("Player");
+    }
+    void Start__()
+    {
+        view.RPC("Start___", RpcTarget.All);
+    }
+
+
+    void Delay()
+    {
+        float shortestDistance = Mathf.Infinity;
+        int num=0;
+        enemies = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject enemy in enemies)
+        {
+            float distanceToEnemy = Vector3.Distance(transform.position, enemy.transform.position);
+            if (distanceToEnemy < shortestDistance)
+            {
+                shortestDistance = distanceToEnemy;
+                nearestEnemy = enemy;
+            }
+            num++;
+        }
+        if (nearestEnemy != null && shortestDistance <= ChaseRange)
+        {
+            PlayersID = nearestEnemy.GetComponent<PhotonView>().ViewID;
+
+            view.RPC("GetPlayerPos", RpcTarget.All, PlayersID);
+        }
+        else
+        {
+            view.RPC("LostPlayerPos", RpcTarget.All);
+        }       
+        
+    }
+
+    void Shoot_Bullect_Line()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var GOJ = filp == false ?
+                PhotonNetwork.Instantiate(ATK2Bullect.name, Shoot.position, Quaternion.Euler(0.0f, 0.0f, 0.0f)) :
+                PhotonNetwork.Instantiate(ATK2Bullect.name, Shoot.position, Quaternion.Euler(0.0f, 0.0f, 180f));
+        }
+    }
+    void Shoot_Bubble()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var GOJ = filp == false ?
+                PhotonNetwork.Instantiate(Bullect.name, Shoot.position, Quaternion.Euler(0.0f, 0.0f, Random.Range(-35, 36))) :
+                PhotonNetwork.Instantiate(Bullect.name, Shoot.position, Quaternion.Euler(0.0f, 0.0f, Random.Range(145, 216)));
+        }
+    }
+    IEnumerator ExampleCoroutine(int a)
+    {
+        if (a == 1)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                yield return new WaitForSeconds(.1f);
+                Shoot_Bubble();
+                yield return new WaitForSeconds(.1f);
+                Shoot_Bubble(); Shoot_Bubble();
+                i++;
+            }
+        }
+        else if (a == 2)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                yield return new WaitForSeconds(.2f);
+                Shoot_Bullect_Line();
+                i++;
+            }
+
+            atk2 = true;
+            Invoke(nameof(akt2_off), .2f);
+        }
+        else if (a == 3)
+        {
+            atk2 = true;
+            yield return new WaitForSeconds(1f);
+            atk2 = false;
+        }
+        else if (a == 4)
+        {
+            int c=1;
+            float aa = .01f;
+            for (int i = 0; i < 6; i++)
+            {
+                c += i;
+                rb.velocity = filp == true ?
+                    Vector2.left * Mathf.Round(i*2) + Vector2.up * (15 - c * 2) :
+                    Vector2.right * Mathf.Round(i * 2) + Vector2.up * (20 - c * 2);
+
+                if (aa<.03f)
+                {
+                    aa += .005f;
+                }
+
+                yield return new WaitForSeconds(aa);
+            }
+            jump = false;
+        }
+    }
+    void akt2_off()
+    {
+        atk2 = false;
+    }
+    [PunRPC]
+    void MoveGOJ()
+    {
+        var GOJ = filp == true ?
+            rb.velocity = Vector2.right * 2 :
+            rb.velocity = Vector2.left * 2;
+    }
+}
