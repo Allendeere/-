@@ -1,0 +1,43 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Conscience : MonoBehaviour
+{
+    //Link: Conscience_count ， menu_Conscience，LevelComplete
+    [Header("good and evil")]
+    public int conscience_count;
+    [Header("Kubo")]
+    [SerializeField] int Kubo_kill;
+    [SerializeField] int Kubo_tame;
+    public Conscience_count _count;
+    [Header("BubblePing")]
+    [SerializeField] int BubblePing_kill;
+    [SerializeField] int BubblePing_tame;
+
+    public void Enemy_Kill(string a)
+    {
+
+        if(a == "Kubo") { Kubo_kill++; }
+        else if (a == "BubblePing") { BubblePing_kill++; }
+
+
+        conscience_count = conscience_count - 2;
+    }
+
+    public void Enemy_Tame(string a)
+    {
+        if (a == "Kubo") { Kubo_tame++; }
+        else if (a == "BubblePing") { BubblePing_tame++; }
+        conscience_count = conscience_count + 1;
+    }
+
+
+    public void LevelComplete()
+    {
+        _count.Kubo_Kill +=  Kubo_kill;
+        _count.Kubo_Tame += Kubo_tame;
+        _count.Conscience += conscience_count;
+    }
+
+}
