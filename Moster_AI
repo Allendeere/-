@@ -5,7 +5,7 @@ using Photon.Pun;
 using Photon.Realtime;
 
 
-public class BubblePine : MonoBehaviour
+public class Moster_AI : MonoBehaviour
 {
     [SerializeField] PhotonView view;
     [SerializeField] Rigidbody2D rb;
