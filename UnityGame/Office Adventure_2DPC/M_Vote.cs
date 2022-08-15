@@ -4,7 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using UnityEngine.UI;
 
-public class M_Vote : MonoBehaviour//link to click
+public class M_Vote : MonoBehaviour//連接 click
 {
     public PhotonView view;
 
@@ -15,7 +15,7 @@ public class M_Vote : MonoBehaviour//link to click
     public GameObject SliderOBJ;
     public Slider TimeSlider;
     
-    bool loadfinish;
+    bool V;
     public int click;
     public float votetime = 5;
     public int level;
@@ -25,7 +25,7 @@ public class M_Vote : MonoBehaviour//link to click
     [SerializeField] GameObject ui_planeII;
     [SerializeField] GetComponent getcomponent;
     [SerializeField] GameObject myPlayer;
-    [SerializeField] LVcomplete lvcomplete;
+    [SerializeField] LVcomplete lvcp;
     [SerializeField] rhythm rhythm;
     [SerializeField] Text t;
     [SerializeField] Animator AnimatorForMenuVotingIsNotFinsh;
@@ -35,7 +35,7 @@ public class M_Vote : MonoBehaviour//link to click
         Mvote.SetActive(false);
         Pvote.SetActive(false);
         view = GetComponent<PhotonView>();
-        loadfinish = false;
+        V = false;
         reLoad = GameObject.Find("ReLoad").GetComponent<ReLoad>();
         if (!reLoad.V_)
         {
@@ -54,16 +54,16 @@ public class M_Vote : MonoBehaviour//link to click
         {
             PhotonNetwork.CurrentRoom.IsOpen = true;
             PhotonNetwork.CurrentRoom.IsVisible = true;
-            Debug.Log("room = public");
+            Debug.Log("當前房間狀態 = 公開");
         }
     }
 
     private void Update()
     {
-        if (lvcomplete != null) { lvcomplete.TestForPlayerOnIt(); }
+        if (lvcp != null) { lvcp.TestForPlayerOnIt(); }
 
 
-        if (loadfinish)
+        if (V)
         {
             if (votetime > 0)
             {
@@ -78,16 +78,16 @@ public class M_Vote : MonoBehaviour//link to click
                     {
                         view.RPC("RPC_Play", RpcTarget.All);
                     }
-                    Debug.Log("o");
+                    Debug.Log("通過");
                 }
                 else
                 {
-                    Debug.Log("x");
+                    Debug.Log("沒過");
                     SliderOBJ.SetActive(false);
                     Mvote.SetActive(false);
                     Pvote.SetActive(false);
                 }
-                loadfinish = false;
+                V = false;
                 votetime = 5;
                 click = 0;
             }
@@ -95,15 +95,18 @@ public class M_Vote : MonoBehaviour//link to click
     }
     public void Leave()
     {
+        //ReLoad reLoad = GameObject.Find("ReLoad").GetComponent<ReLoad>();
         reLoad.leaveroom();
     }
     public void Skip_()
     {
-        loadfinish = false;
+        V = false;
         votetime = 5;
         click = 0;
         view.RPC("RPC_Play", RpcTarget.All);
     }
+
+
     void Play_()
     {
 
@@ -116,7 +119,7 @@ public class M_Vote : MonoBehaviour//link to click
     public void Vote_(int level_) // <-----------------------
     {
         
-        if (!loadfinish)
+        if (!V)
         {
             level = level_;
             view.RPC("RPC_Vote", RpcTarget.All,level_);
@@ -128,17 +131,17 @@ public class M_Vote : MonoBehaviour//link to click
     }
     public void Vote_Text_(string s)
     {
-        if (!loadfinish)
+        if (!V)
         {
             view.RPC("RPC_Vote_Text", RpcTarget.All, s);
         }
     }
     void Vote__()
     {
-        if (loadfinish == false)
+        if (V == false)
         {
             TimeSlider.value = 5;
-            loadfinish = true;
+            V = true;
             SliderOBJ.SetActive(true);
             if (PhotonNetwork.IsMasterClient)
             {
@@ -151,7 +154,7 @@ public class M_Vote : MonoBehaviour//link to click
         }
         else 
         {
-            Debug.Log("vote not end...");
+            Debug.Log("投票還沒結束...");
         }
     }
 
@@ -159,6 +162,7 @@ public class M_Vote : MonoBehaviour//link to click
     {
         click++;
         view.RPC("RPC_Click", RpcTarget.All, click);
+        //SliderOBJ.SetActive(false);
         Mvote.SetActive(false);
         Pvote.SetActive(false);
 
@@ -168,12 +172,13 @@ public class M_Vote : MonoBehaviour//link to click
     {
         click--;
         view.RPC("RPC_Click", RpcTarget.All, click);
+        //SliderOBJ.SetActive(false);
         Mvote.SetActive(false);
         Pvote.SetActive(false);
     }
 
 
-    public static void click_tp(int type) //link to click
+    public static void click_tp(int type) //連接 click
     {
         m_vote.click_run(type);
 
@@ -225,7 +230,7 @@ public class M_Vote : MonoBehaviour//link to click
         myPlayer = getcomponent.Playerobject;
         if (myPlayer != null)
         {
-            reLoad.transform_ = myPlayer.transform.position; Debug.Log("player pos get");
+            reLoad.transform_ = myPlayer.transform.position; Debug.Log("aaa11100011");
         }
     }
 }

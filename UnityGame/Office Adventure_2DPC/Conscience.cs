@@ -4,18 +4,18 @@ using UnityEngine;
 
 public class Conscience : MonoBehaviour
 {
-    //Link: Conscience_count ï¼Œ menu_Conscienceï¼ŒLevelComplete
-    [Header("good and evil")]
+    //¬ÛÃö : Conscience_count ¡A menu_Conscience¡ALevelComplete
+    [Header("µ½´c")]
     public int conscience_count;
-    [Header("Kubo")]
+    [Header("®w¥¬ - Kubo")]
     [SerializeField] int Kubo_kill;
     [SerializeField] int Kubo_tame;
     public Conscience_count _count;
-    [Header("BubblePing")]
+    [Header("ªwªwªQ - BubblePing")]
     [SerializeField] int BubblePing_kill;
     [SerializeField] int BubblePing_tame;
 
-    public void Enemy_Kill(string a)
+    public void Em_Kill(string a)
     {
 
         if(a == "Kubo") { Kubo_kill++; }
@@ -25,7 +25,7 @@ public class Conscience : MonoBehaviour
         conscience_count = conscience_count - 2;
     }
 
-    public void Enemy_Tame(string a)
+    public void Em_Tame(string a)
     {
         if (a == "Kubo") { Kubo_tame++; }
         else if (a == "BubblePing") { BubblePing_tame++; }
